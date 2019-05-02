@@ -1,0 +1,43 @@
+
+from flask import Flask, request, jsonify
+import pandas as pd
+import pickle
+from sklearn import preprocessing
+from sklearn.preprocessing import StandardScaler
+from sklearn.externals import joblib
+import keras
+from keras.models import load_model
+#global graph,model
+
+
+# Flask
+app = Flask(__name__)
+
+# Load model
+#graph = tf.get_default_graph()
+model = load_model('NewPlayerNeuralNet.h5')
+sc = joblib.load('scaler.joblib')
+
+
+# Handle requests
+@app.route('/onNewPlayer', methods=['POST'])
+def predict():
+    playerData = request.get_json(force=True)
+    d = {'edad': [playerData['edad']], 'escuela': [playerData['escuela']], 'genero': [
+        playerData['genero']], 'grado': [playerData['grado']]}
+    df = pd.DataFrame(data=d)
+    X = sc.transform(df)
+#    with graph.as_default():
+    intensities = model.predict(X)
+    jsonFormatIntensities = "{ \"LOIN0\":["+str(intensities[0, 0])+",1,0],\"LOIN1\":["+str(intensities[0, 1])+",1,0],\"LOIN2\":["+str(
+        intensities[0, 2])+",1,0],\"LOIN3\":["+str(intensities[0, 3])+",1,0],\"LOIN4\":["+str(intensities[0, 4])+",1,0] }"
+    return jsonFormatIntensities
+
+
+@app.route('/onNewPlayer', methods=['GET'])
+def onWelcome():
+    return 'hola el mundo'
+
+
+if __name__ == '__server__':
+    app.run(host="localhost", port=5000)

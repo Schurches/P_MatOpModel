@@ -1,0 +1,16 @@
+# ./docker-compose.yml
+
+version: '3'
+
+services:
+  model:
+    build: .
+    volumes:
+      - ./web:/app/
+    ports:
+      - "8102:5000"
+    stdin_open: true
+    tty: true
+
+volumes:
+  volumeDB:

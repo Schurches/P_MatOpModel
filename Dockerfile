@@ -1,8 +1,14 @@
 FROM ubuntu:latest
-COPY /web/* /app
+#FROM python:3.6.7-alpine3.6
+COPY /web/* /app/
 WORKDIR /app
-RUN apt-get update -y
-RUN apt-get install -y python-pip python-dev build-essential
-RUN pip install -r requirements.txt
+#RUN apt-get update -y
+#RUN apt-get install -y python-pip python3 python3-dev build-essential
+RUN apt-get update \
+  && apt-get install -y python3-pip python3-dev \
+  && cd /usr/local/bin \
+  && ln -s /usr/bin/python3 python \
+  && pip3 install --upgrade pip
+RUN pip3 install -r /app/requirements.txt
 EXPOSE 5000
 CMD python ./server.py

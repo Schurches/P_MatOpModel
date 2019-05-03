@@ -18,6 +18,9 @@ app = Flask(__name__)
 model = load_model('NewPlayerNeuralNet.h5')
 sc = joblib.load('scaler.joblib')
 
+@app.route("/")
+def hello():
+    return "Hello Worldsss!"
 
 # Handle requests
 @app.route('/onNewPlayer', methods=['POST'])
@@ -39,5 +42,8 @@ def onWelcome():
     return 'hola el mundo'
 
 
-if __name__ == '__server__':
-    app.run(host="localhost", port=5000)
+#if __name__ == '__server__':
+#    app.run(host="localhost", port=5000)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int("5000"), debug=True)

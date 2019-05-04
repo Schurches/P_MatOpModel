@@ -5,10 +5,12 @@ version: '3'
 services:
   model:
     build: .
+    networks:
+     - brDown
     volumes:
       - ./web:/app/
     ports:
-      - "8102:5000"
+     - "8102:5000"
     stdin_open: true
     tty: true
 
@@ -16,6 +18,5 @@ volumes:
   volumeDB:
 
 networks:
-  default:
-    external:
-      name: brDown
+  brDown:
+    external: true

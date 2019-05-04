@@ -1,1 +1,2 @@
 docker build --network=brDown --tag modelcontainer .
+docker run --name themodel -d -p 8102:5000 modelcontainer

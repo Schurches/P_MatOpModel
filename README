@@ -1,2 +1,7 @@
 docker build --network=brDown --tag modelcontainer .
-docker run --name themodel -d -p 8102:5000 modelcontainer
+docker run -d -p 8102:5000 modelcontainer
+
+Run for debug:
+docker run --name flaskapp -v$PWD/web:/app -p8102:5000 modelcontainer
+
+delete all stopped containers with docker rm $(docker ps -a -q)

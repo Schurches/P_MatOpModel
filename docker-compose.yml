@@ -1,12 +1,12 @@
 # ./docker-compose.yml
 
-version: '3'
+version: '3.4'
 
 services:
   model:
-    build: .
-    networks:
-     - brDown
+    build:
+      context: .
+      network: brDown
     volumes:
       - ./web:/app/
     ports:

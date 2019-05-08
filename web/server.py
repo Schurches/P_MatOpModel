@@ -39,8 +39,8 @@ def predict():
         d = {'edad': [playerData['edad']], 'escuela': [playerData['escuela']], 'genero': [playerData['genero']], 'grado': [playerData['grado']]}
         df = pd.DataFrame(data=d)
         X = sc.transform(df)
-        #    with graph.as_default():
-        intensities = model.predict(X)
+        with graph.as_default():
+            intensities = model.predict(X)
         jsonFormatIntensities = "{ \"LOIN0\":["+str(intensities[0, 0])+",1,0],\"LOIN1\":["+str(intensities[0, 1])+",1,0],\"LOIN2\":["+str(intensities[0, 2])+",1,0],\"LOIN3\":["+str(intensities[0, 3])+",1,0],\"LOIN4\":["+str(intensities[0, 4])+",1,0] }"
         return jsonFormatIntensities
 

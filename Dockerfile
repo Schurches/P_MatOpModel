@@ -13,4 +13,4 @@ RUN apt-get update \
   && pip3 install --upgrade pip
 RUN pip3 install -r /app/requirements.txt
 EXPOSE 5000
-CMD python ./app.py
+CMD python ./index.py

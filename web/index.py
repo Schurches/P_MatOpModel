@@ -9,6 +9,7 @@ import keras
 from keras.models import load_model
 global graph,model
 import tensorflow as tf
+import numpy as np
 
 # Load model
 graph = tf.get_default_graph()

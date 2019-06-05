@@ -24,8 +24,19 @@ app = Flask(__name__)
 def hello():
     return "Hello World!"
 
-#Sum binomial rates to get easy and hard %
+
 def sumEasyAndHardScores(array):
+    """Recibe un arreglo 2xN con el historial de ejercicios fáciles y difíciles
+
+    Parameters:
+        
+        array (array): Arreglo con historial de ejercicios
+
+    Returns:
+        
+        [int,int]:Total de ejercicios fáciles y difíciles
+
+   """     
     totalE = 0
     totalH = 0
     for i in range(0,len(array)):
@@ -35,6 +46,17 @@ def sumEasyAndHardScores(array):
 
 #Sum bad, medium and hard categories rates to get %
 def sumPerformanceCategories(array):
+    """Recibe un arreglo 3xN con el historial de puntajes en cada categoría de desempeño
+
+    Parameters:
+        
+        array (array): Arreglo con historial de porcentajes en cada categoría
+
+    Returns:
+        
+        [int,int,int]:Puntaje total en cada categoría
+
+   """
     totalB = 0
     totalM = 0
     totalG = 0
@@ -47,6 +69,19 @@ def sumPerformanceCategories(array):
 
 #General Binomial model
 def binomialRate(binomialS, W, a):
+    """Calcula el porcentaje de ejercicios fáciles y difíciles para la siguiente sesión de juego
+
+    Parameters:
+        
+        binomialS (array): Arreglo con historial de ejercicios fáciles y difíciles
+        W (int): Peso no-informativo del modelo binomial
+        a (int): Valor inicial del modelo binomial
+
+    Returns:
+        
+        array: Porcentaje de ejercicios fáciles y difíciles para la siguiente sesión
+
+   """
     r1,r2 = sumEasyAndHardScores(binomialS)
     den = W+r1+r2
     S1 = (r1+W*a)/den
@@ -57,6 +92,19 @@ def binomialRate(binomialS, W, a):
 
 #General Multinomial model
 def multinomialRate(multinomialS, W, a):
+     """Calcula la reputación del jugador en cada categoría de desempeño con base en su desempeño histórico
+
+    Parameters:
+        
+        multinomialS (array): Arreglo con historial de reputación en cada categoría de desempeño
+        W (int): Peso no-informativo del modelo multinomial
+        a (int): Valor inicial del modelo multinomial
+
+    Returns:
+        
+        array: Reputación para en cada categoría para la siguiente sesión de juego
+
+   """
     r1,r2,r3 = sumPerformanceCategories(multinomialS)
     den = W+r1+r2+r3
     S1 = (r1+W*a) / den
@@ -68,6 +116,7 @@ def multinomialRate(multinomialS, W, a):
 
 #Get number of questiosn per percentage
 def questionDistributions(intensity,n):
+     """Calcula el número de ejercicios para cada dificultad"""
     N = []
     for i in range (0,len(intensity)):
         N.append(n*intensity[i])
@@ -76,13 +125,49 @@ def questionDistributions(intensity,n):
 
 #Get score from player performance
 def giveScoreToPlayer(difficulty, time, ansChangedCount, isCorrect, LO, grade, isPublicOrPrivate):
+     """Evalúa cómo le fue al jugador resolviendo un ejercicio en particular
+
+    Parameters:
+        
+        difficulty (int): Dificultad del ejercicio
+        time (float): Tiempo que demoró contestando
+        ansChangedCount (int): Cuántas veces cambió entre opciones de respuesta
+        isCorrect (int): Si contestó el ejercicio de manera correcta o incorrecta
+        LO (int): Objetivo de aprendizaje asociado al ejercicio
+        grade (int): Grado que cursa el jugador
+        isPublicOrPrivate (int): Si el colegio del jugador es público o privado
+
+    Returns:
+        
+        int: Puntaje para el ejercicio
+
+   """
     medianTime = med[isPublicOrPrivate,LO,grade]+2
-    bonus = difficulty+1
-    S = ((20*bonus)*(1-time/medianTime)-2*(ansChangedCount-1))*isCorrect
+    if(time <= medianTime and isCorrect == 1):
+        S = 20
+    else:
+        time = time-medianTime;
+        bonus = difficulty+1
+        S = ((20*bonus)*(1-time/medianTime)-2*(ansChangedCount-1))*isCorrect
     return S
 
 #This returns the NEXT amount of easy and hard exercises
 def rateRules1(nExercises, nEasy, nHard, scores, difficulty):
+    """Varía la cantidad de ejercicios fáciles y difíciles para un objetivo de aprendizaje
+
+    Parameters:
+        
+        nExercises (int): Cantidad de ejercicios 
+        nEasy (int): Cantidad de ejercicios fáciles del objetivo
+        nHard (int): Cantidad de ejercicios difíciles del objetivo
+        scores (int): Puntajes en cada ejercicio
+        difficulty (int): dificultad del ejercicio
+
+    Returns:
+        
+        array: Nueva cantidad de ejercicios fáciles y difíciles para la categoría actual
+
+   """
     easyCounter = nEasy;
     hardCounter = nHard;
     for i in range(0,len(scores)):
@@ -121,6 +206,18 @@ def rateRules1(nExercises, nEasy, nHard, scores, difficulty):
 
 #This increases the amount of % of exercises in each LO
 def rateRules2(easyBinomialRates, exercises):
+    """Varía los puntajes de reputación para cada categoría de desempeño de cada objetivo de aprendizaje
+
+    Parameters:
+        
+        easyBinomialRates (array): Porcentaje de ejercicios fáciles en cada objetivo de aprendizaje
+        exercises (array): Cantidad de ejercicios en cada objetivo de aprendizaje
+
+    Returns:
+        
+        array: Reputaciones para cada categoría de desempeño
+
+   """
     multinomialCounter = [[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
     for i in range(0,5):
         if(exercises[i] > 0):
@@ -146,6 +243,7 @@ def rateRules2(easyBinomialRates, exercises):
 
 #Apply aging factor to multinomial model
 def applyMultinomialAging(multinomialHist,agingFactor):
+    """ Reduce los puntajes históricos en cada categoría de desempeño """
     for i in range(0,len(multinomialHist)):
         multinomialHist[i][0] = multinomialHist[i][0]*agingFactor
         multinomialHist[i][1] = multinomialHist[i][1]*agingFactor
@@ -154,6 +252,7 @@ def applyMultinomialAging(multinomialHist,agingFactor):
 
 #Apply aging factor to binomial model
 def applyBinomialAging(binomialHist,agingFactor):
+    """ Reduce los puntajes históricos en del modelo binomial """
     for i in range(0,len(binomialHist)):
         binomialHist[i][0] = binomialHist[i][0]*agingFactor
         binomialHist[i][1] = binomialHist[i][1]*agingFactor
@@ -161,6 +260,17 @@ def applyBinomialAging(binomialHist,agingFactor):
 
 #Get next group of intensities
 def calculateIntensity(multinomialPer):
+    """Calcula el porcentaje de ejercicios para la siguiente sesión de juego en cada objetivo de aprendizaje
+
+    Parameters:
+        
+        multinomialPer (array): Porcentaje de reputación para cada categoría de cada objetivo de aprendizaje
+
+    Returns:
+        
+        array: Porcentaje de ejercicios para cada categoría
+
+   """
     i = 0;
     perN = []
     while(i < 4 and multinomialPer[i][2] >= 0.8):
@@ -183,6 +293,40 @@ def calculateIntensity(multinomialPer):
     return np.around(perN,decimals=2)
 
 def obtainNextIntensity(nEasy, nHard, total, nSesion, binHist, binPer, bin_a, binAging, mulHist, mulPer, mult_a, mulAging, W, difficulty, times, titubeo, isCorrect, LO, grade, isPublicOrPrivate):
+    """Calcula la cantidad de ejercicios para la siguiente sesión de juego
+
+    Parameters: 
+        
+        nEasy (array): Cantidad de ejercicios fáciles para cada objetivo de aprendizaje \n
+        nHard (array): Cantidad de ejercicios difíciles para cada objetivo de aprendizaje \n
+        total (array): Total de ejercicios para cada objetivo de aprendizaje \n
+        nSesion (int): Número de la sesión de juego \n
+        binHist (array): Historial de cantidad de ejercicios fáciles y difíciles para cada objetivo de aprendizaje \n
+        binPer (array): Historial de porcentajes de ejercicios fáciles y difíciles en cada objetivo de aprendizaje \n
+        bin_a (float): Valor inicial para el modelo binomial \n
+        binAging (float): Factor de envejecimiento del modelo binomial \n
+        mulHist (array): Historial de reputaciones en cada categoría de desempeño para cada objetivo de aprendizaje \n
+        mulPer (array): Historial de porcentajes de reputación para cada categoría de objetivo de aprendizaje \n
+        mult_a (float): Valor inicial para el modelo multinomial \n
+        mulAging (float): Factor de envejecimiento del modelo multinomial \n
+        W (int): Peso no-informativo para los modelos de reputación \n
+        difficulty (array): Dificultades de cada ejercicio contestado \n
+        times (array): Tiempo tardado en contestar cada ejercicio \n
+        titubeo (array): Cantidad de veces que alternó entre opciones de respuesta en cada ejercicio \n
+        isCorrect (array): Si cada ejercicio fue resuelto de manera correcta o incorrecta \n
+        LO (array): Objetivo de aprendizaje asociado a cada ejercicio \n
+        grade (int): Grado que está cursando el jugador \n
+        isPublicOrPrivate (int): Si el colegio del jugador es público o privado \n
+
+    Returns:
+        
+        list: Historial de puntuaciones del modelo binomial \n
+        list: Historiales de porcentajes del modelo binomial \n
+        list: Historial de puntuaciones del modelo multinomial \n 
+        list: Historiales de porcentajes del modelo multinomial \n
+        list: Cantidad de ejercicios para cada objetivo de aprendizaje en la siguiente sesión \n
+
+   """
     binomialEasyRatesPerLO = []
     #Calculating binomial scores
     if(nSesion % 5 == 0):
@@ -222,6 +366,18 @@ def obtainNextIntensity(nEasy, nHard, total, nSesion, binHist, binPer, bin_a, bi
     return [binHist, binPer, mulHist, mulPer, intensities]
 
 def obtainEasyAndHardCount(difficulties, LO):
+    """Calcula la cantidad de ejercicios fáciles y difíciles para cada objetivo de aprendizaje
+
+    Parameters:
+        
+        difficulties (array): Arreglo de dificultades fáciles y difíciles
+        LO (array): Objetivo de aprendizaje asociado a cada dificultad
+
+    Returns:
+        
+        [list]: Lista con el total de ejercicios, ejercicios fáciles y difíciles
+
+   """
     nEasy = []
     nHard = []
     total = []
@@ -244,6 +400,7 @@ def obtainEasyAndHardCount(difficulties, LO):
 
 @app.route('/onNewPlayer', methods=['POST'])
 def predict():
+    """ Calcula una intensidad inicial de ejercicios para un nuevo jugador """
     playerData = request.get_json(force=True)
     d = {'edad': [playerData['edad']], 'escuela':[playerData['tipoEscuela']], 'genero': [playerData['genero']], 'grado': [playerData['grado']]}
     df = pd.DataFrame(data=d)
@@ -267,6 +424,7 @@ def predict():
 
 @app.route('/nextIntensity', methods=['POST'])
 def onPerformanceReceived():
+    """Calcula la cantidad de ejercicios con base en el desempeño del jugador en la última sesión de juego y considerando su historial """
     playerData = request.get_json(force=True)
     d = {'LOs': playerData['LO'],
          'grado': playerData['grado'],
@@ -292,7 +450,7 @@ def onPerformanceReceived():
     n = len(d['isCorrect'])
     W = 2;
     bin_a = 0.5
-    mult_a = 0.2
+    mult_a = 0.33
     bin_aging = 0.5
     mult_aging = 0.3
     #Variables
@@ -324,6 +482,6 @@ def onPerformanceReceived():
             intensityJSON = intensityJSON + ", "
     jsonIntensityChild = "\"Intensities\": {"+intensityJSON+"}"
     return "{ "+binJSON+mulJSON+jsonIntensityChild+" }"
-
+    
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int("5000"), debug=True)
